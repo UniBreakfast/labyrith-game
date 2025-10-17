@@ -1,3 +1,4 @@
+const drawStepDuration = 10
 const palette = {
   wall: 'green',
   floor: '#531',
@@ -33,11 +34,11 @@ const gameState = {
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 1, 0, 1, 1, 1, 0, 1],
+    [1, 0, 0, 1, 0, 1, 0, 1, 0, 1],
+    [1, 0, 0, 1, 1, 1, 0, 1, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 1, 0, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
   ],
@@ -73,14 +74,22 @@ function updateCanvasSize() {
   render()
 }
 
-function render() {
-  drawMap()
-  drawPlayer()
+async function render() {
+  await darkenScreen()
+  await drawMap()
+  await drawPlayer()
 }
 
-function drawMap() {
+async function darkenScreen() {
+  await pause(drawStepDuration)
+  
+  ctx.fillStyle = '#0004'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+}
+
+async function drawMap() {
   const { map } = gameState
-  const { tileSize, rowCount } = config
+  const { rowCount } = config
 
   for (let y = 0; y < rowCount; y++) {
     const row = map[y]
@@ -88,38 +97,45 @@ function drawMap() {
     for (let x = 0; x < rowCount; x++) {
       const tileCode = row[x]
 
-      drawTile(tileCode, x, y)
-      ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize)
+      await drawTile(tileCode, x, y)
     }
   }
 }
 
-function drawTile(code, x, y) {
+async function drawTile(code, x, y) {
   const { tileSize } = config
   const tileType = tileCoding[code]
   const color = palette[tileType]
 
+  await pause(drawStepDuration)
+  
   ctx.fillStyle = color
   ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize)
 }
 
-function drawPlayer() {
+async function drawPlayer() {
   const { x, y } = gameState.player
   const color = palette.player
 
-  drawSpot(x, y, color)
+  await drawSpot(x, y, color)
 }
 
-function drawSpot(x, y, color) {
+async function drawSpot(x, y, color) {
   const { tileSize } = config
   const radius = tileSize / 2
   const cx = x * tileSize + radius
   const cy = y * tileSize + radius
 
+  await pause(drawStepDuration)
+  
   ctx.fillStyle = color
   ctx.beginPath()
   ctx.arc(cx, cy, radius, 0, 2 * Math.PI)
   ctx.fill()
+}
+
+function pause(duration) {
+  return new Promise((resolve) => setTimeout(resolve, duration))
 }
 
 function handleKeyDown(e) {
