@@ -46,6 +46,7 @@ const gameState = {
 }
 const bodyPadding = parseInt(getComputedStyle(body).padding)
 const { canvas, ctx } = prepareCanvas()
+let busyRendering = false
 
 render()
 
@@ -75,9 +76,13 @@ function updateCanvasSize() {
 }
 
 async function render() {
+  if (busyRendering) return
+
+  busyRendering = true
   await darkenScreen()
   await drawMap()
   await drawPlayer()
+  busyRendering = false
 }
 
 async function darkenScreen() {
@@ -139,6 +144,8 @@ function pause(duration) {
 }
 
 function handleKeyDown(e) {
+  if (busyRendering) return
+  
   const { key } = e
   const command = keyMapping[key]
 
